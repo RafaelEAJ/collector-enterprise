@@ -1,0 +1,15 @@
+{
+  "type": "image",
+  "score": 50,
+  "status": "🚧 Fase 3: Avance Medio",
+  "detections": [
+    "2 (0.70)",
+    "2 (0.45)",
+    "3 (0.40)",
+    "2 (0.39)"
+  ],
+  "processed_file": "file-1764279613929-742641559.jpg",
+  "timestamp": "2025-11-27T21:40:17.101Z",
+  "originalUrl": "/static/uploads/file-1764279613929-742641559.jpg",
+  "processedUrl": "/static/structure-images/file-1764279613929-742641559.jpg"
+}

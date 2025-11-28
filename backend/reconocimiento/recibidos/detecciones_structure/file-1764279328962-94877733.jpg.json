@@ -1,0 +1,14 @@
+{
+  "type": "image",
+  "score": 30,
+  "status": "🏗️ Fase 2: En Desarrollo Temprano",
+  "detections": [
+    "2 (0.36)",
+    "2 (0.29)",
+    "2 (0.26)"
+  ],
+  "processed_file": "file-1764279328962-94877733.jpg",
+  "timestamp": "2025-11-27T21:35:32.045Z",
+  "originalUrl": "/static/uploads/file-1764279328962-94877733.jpg",
+  "processedUrl": "/static/structure-images/file-1764279328962-94877733.jpg"
+}

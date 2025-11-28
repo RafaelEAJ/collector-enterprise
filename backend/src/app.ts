@@ -39,6 +39,14 @@ const allowedOrigins = (process.env.FRONTEND_URLS ?? process.env.FRONTEND_URL ??
   .map((origin) => origin.trim())
   .filter(Boolean)
 
+// Ensure localhost:5173 and 5174 are always allowed for development
+const devOrigins = ['http://localhost:5173', 'http://localhost:5174']
+devOrigins.forEach(origin => {
+  if (!allowedOrigins.includes(origin)) {
+    allowedOrigins.push(origin)
+  }
+})
+
 const corsOptions: CorsOptions = {
   origin: (origin, callback) => {
     if (!origin) {

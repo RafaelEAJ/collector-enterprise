@@ -1,0 +1,20 @@
+{
+  "type": "image",
+  "score": 60,
+  "status": "🏠 Fase 4: En Etapa Final",
+  "explanation": "El sistema ha detectado un avance del 60%. Se han identificado los siguientes elementos: 3, 2, 0. Según esto, la obra se encuentra en: Fase 4: En Etapa Final.",
+  "detections": [
+    "2 (0.94)",
+    "0 (0.92)",
+    "3 (0.84)",
+    "2 (0.80)",
+    "2 (0.79)",
+    "2 (0.78)",
+    "3 (0.61)",
+    "2 (0.49)"
+  ],
+  "processed_file": "file-1764280350871-155007654.jpg",
+  "timestamp": "2025-11-27T21:52:34.362Z",
+  "originalUrl": "/static/uploads/file-1764280350871-155007654.jpg",
+  "processedUrl": "/static/structure-images/file-1764280350871-155007654.jpg"
+}

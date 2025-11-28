@@ -1,0 +1,12 @@
+{
+  "type": "image",
+  "score": 10,
+  "status": "🌱 Fase 1: Proyecto Iniciado",
+  "detections": [
+    "0 (0.45)"
+  ],
+  "processed_file": "file-1764279009001-746694373.jpg",
+  "timestamp": "2025-11-27T21:30:12.329Z",
+  "originalUrl": "/static/uploads/file-1764279009001-746694373.jpg",
+  "processedUrl": "/static/structure-images/file-1764279009001-746694373.jpg"
+}

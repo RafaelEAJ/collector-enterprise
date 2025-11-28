@@ -1,0 +1,17 @@
+{
+  "type": "video",
+  "score": 30,
+  "status": "🏗️ Fase 2: En Desarrollo Temprano",
+  "detections": [
+    "2"
+  ],
+  "processed_file": "file-1764278374600-518444721.mp4",
+  "stats": {
+    "total_frames": 1088,
+    "frames_with_detection": 239,
+    "effective_time_percent": 21.96691176470588
+  },
+  "timestamp": "2025-11-27T21:21:13.920Z",
+  "originalUrl": "/static/uploads/file-1764278374600-518444721.mp4",
+  "processedUrl": "/static/structure-images/file-1764278374600-518444721.mp4"
+}

@@ -1,0 +1,18 @@
+{
+  "type": "image",
+  "score": 60,
+  "status": "🚧 Fase 3: Avance Medio",
+  "explanation": "Se observan avances significativos en las terminaciones del departamento. Las paredes presentan avance en sus revestimientos y el piso se observa con progreso en su nivelación. Se verifica la presencia de marcos, puertas o ventanas instaladas. El cielo raso/techo presenta avance en su instalación.",
+  "detections": [
+    "Paredes/Pisos (0.95)",
+    "Techo (0.93)",
+    "Paredes/Pisos (0.86)",
+    "Ventanas/Puertas (0.85)",
+    "Paredes/Pisos (0.50)",
+    "Paredes/Pisos (0.27)"
+  ],
+  "processed_file": "file-1764282721849-471285648.jpg",
+  "timestamp": "2025-11-27T22:32:05.335Z",
+  "originalUrl": "/static/uploads/file-1764282721849-471285648.jpg",
+  "processedUrl": "/static/structure-images/file-1764282721849-471285648.jpg"
+}

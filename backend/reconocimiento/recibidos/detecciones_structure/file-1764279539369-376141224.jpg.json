@@ -1,0 +1,16 @@
+{
+  "type": "image",
+  "score": 60,
+  "status": "🏠 Fase 4: En Etapa Final",
+  "detections": [
+    "3 (0.94)",
+    "2 (0.91)",
+    "2 (0.85)",
+    "0 (0.84)",
+    "2 (0.62)"
+  ],
+  "processed_file": "file-1764279539369-376141224.jpg",
+  "timestamp": "2025-11-27T21:39:02.540Z",
+  "originalUrl": "/static/uploads/file-1764279539369-376141224.jpg",
+  "processedUrl": "/static/structure-images/file-1764279539369-376141224.jpg"
+}

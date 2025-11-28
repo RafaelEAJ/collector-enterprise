@@ -23,14 +23,19 @@ const issueToken = (idToken: string) => idToken
 
 // POST /auth/login
 export const loginUser = async (req: Request, res: Response, next: NextFunction) => {
+  console.log('[Auth] Login request received')
   try {
     const { idToken } = loginSchema.parse(req.body)
+    console.log('[Auth] Token received, verifying...')
 
     const decoded = await admin.auth().verifyIdToken(idToken)
+    console.log('[Auth] Token verified for UID:', decoded.uid)
 
     let user = await prisma.user.findUnique({ where: { firebaseUid: decoded.uid } })
+    console.log('[Auth] User found in DB:', user ? 'Yes' : 'No')
 
     if (!user) {
+      console.log('[Auth] Creating new user...')
       user = await prisma.user.create({
         data: {
           firebaseUid: decoded.uid,
@@ -39,13 +44,16 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
           role: 'OPERATOR',
         },
       })
+      console.log('[Auth] New user created:', user.id)
     }
 
     if (!user.isActive) {
+      console.warn('[Auth] User is inactive:', user.id)
       return res.status(401).json({ error: 'Usuario inactivo' })
     }
 
     const token = issueToken(idToken)
+    console.log('[Auth] Login successful, returning token')
 
     return res.status(200).json({
       user: {
@@ -58,7 +66,7 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
       token,
     })
   } catch (error) {
-    console.error('loginUser error:', error)
+    console.error('[Auth] loginUser error:', error)
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: 'Parámetros inválidos', details: error.flatten() })
     }

@@ -26,6 +26,7 @@ interface StructureResult {
     timestamp?: string
     originalUrl?: string
     processedUrl?: string
+    explanation?: string
 }
 
 const StructureMonitor = () => {
@@ -36,14 +37,26 @@ const StructureMonitor = () => {
     const fileInputRef = useRef<HTMLInputElement>(null)
     const pollingIntervalRef = useRef<number | null>(null)
 
+    const [processing, setProcessing] = useState(false)
+    const [localPreview, setLocalPreview] = useState<string | null>(null)
+
     // Función para obtener el estado
     const fetchStatus = async () => {
         try {
-            console.log('Fetching structure status...')
+            // console.log('Fetching structure status...')
             const response = await api.get('/v1/structure/status')
-            console.log('Structure status response:', response.data)
+            // console.log('Structure status response:', response.data)
             if (response.data.success) {
-                setStatus(response.data.status)
+                if (response.data.processing) {
+                    setProcessing(true)
+                } else {
+                    setProcessing(false)
+                    setStatus(response.data.status)
+                    // Si ya terminó, limpiamos el preview local
+                    if (response.data.status) {
+                        setLocalPreview(null)
+                    }
+                }
             }
             setError(null)
         } catch (err: any) {
@@ -66,6 +79,12 @@ const StructureMonitor = () => {
     const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0]
+
+            // Crear preview local
+            const objectUrl = URL.createObjectURL(file)
+            setLocalPreview(objectUrl)
+            setStatus(null) // Limpiar estado anterior visualmente
+
             await uploadFile(file)
         }
     }
@@ -165,8 +184,34 @@ const StructureMonitor = () => {
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {loading && !status ? (
-                            <Skeleton className="w-full h-[400px] rounded-lg" />
+                        {(loading || processing) && !status ? (
+                            localPreview ? (
+                                <div className="relative w-full rounded-lg overflow-hidden border-2 border-primary bg-black h-[400px] flex items-center justify-center">
+                                    <video
+                                        src={localPreview}
+                                        controls
+                                        autoPlay
+                                        muted
+                                        loop
+                                        className="max-w-full max-h-full opacity-50"
+                                    />
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30 backdrop-blur-sm">
+                                        <Loader2 className="h-16 w-16 animate-spin text-white mb-4" />
+                                        <div className="bg-black/70 px-4 py-2 rounded-full">
+                                            <p className="text-white font-medium animate-pulse">
+                                                Analizando estructura...
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center h-[400px] gap-4">
+                                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                                    <p className="text-muted-foreground">
+                                        {processing ? 'Analizando estructura...' : 'Cargando...'}
+                                    </p>
+                                </div>
+                            )
                         ) : status ? (
                             <div className="relative w-full rounded-lg overflow-hidden border-2 border-primary bg-black h-[400px] flex items-center justify-center">
                                 {status.type === 'video' ? (
@@ -222,10 +267,20 @@ const StructureMonitor = () => {
 
                             <div className="pt-4 border-t">
                                 <p className="text-sm text-muted-foreground mb-2">Estado Actual</p>
-                                <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                                <div className="flex items-center gap-2 p-3 bg-muted rounded-lg mb-4">
                                     <HardHat className="h-5 w-5 text-primary" />
                                     <span className="font-medium">{status?.status || 'Sin datos'}</span>
                                 </div>
+
+                                {status?.explanation && (
+                                    <Alert className="bg-blue-500/10 border-blue-500/20 text-blue-500">
+                                        <CheckCircle2 className="h-4 w-4" />
+                                        <AlertTitle>Análisis de IA</AlertTitle>
+                                        <AlertDescription className="text-xs mt-1">
+                                            {status.explanation}
+                                        </AlertDescription>
+                                    </Alert>
+                                )}
                             </div>
                         </CardContent>
                     </Card>
@@ -276,10 +331,6 @@ const StructureMonitor = () => {
             )}
         </div>
     )
-}
-
-function Skeleton({ className }: { className?: string }) {
-    return <div className={cn("animate-pulse rounded-md bg-muted", className)} />
 }
 
 export default StructureMonitor

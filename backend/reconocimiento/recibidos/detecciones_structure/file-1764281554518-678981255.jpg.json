@@ -1,0 +1,17 @@
+{
+  "type": "image",
+  "score": 60,
+  "status": "🚧 Fase 3: Avance Medio",
+  "explanation": "El sistema ha detectado un avance del 60%. Se han identificado los siguientes elementos: ventanas/puertas, techo, paredes/pisos. Según esto, la obra se encuentra en: Fase 3: Avance Medio.",
+  "detections": [
+    "Ventanas/Puertas (0.94)",
+    "Paredes/Pisos (0.91)",
+    "Paredes/Pisos (0.85)",
+    "Techo (0.84)",
+    "Paredes/Pisos (0.62)"
+  ],
+  "processed_file": "file-1764281554518-678981255.jpg",
+  "timestamp": "2025-11-27T22:12:37.827Z",
+  "originalUrl": "/static/uploads/file-1764281554518-678981255.jpg",
+  "processedUrl": "/static/structure-images/file-1764281554518-678981255.jpg"
+}

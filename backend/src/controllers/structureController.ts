@@ -25,13 +25,14 @@ let lastStatus: StructureResult & {
     originalUrl: string
     processedUrl: string
 } | null = null
-let isExplicitlyCleared = false
+let isProcessing = false
 
 // Rutas de archivos
 const BACKEND_ROOT = path.resolve(__dirname, '..', '..')
 const UPLOADS_DIR = path.join(BACKEND_ROOT, 'uploads')
 const RECIBIDOS_DIR = path.join(BACKEND_ROOT, 'reconocimiento', 'recibidos', 'detecciones_structure')
 const PYTHON_SCRIPT_PATH = path.join(BACKEND_ROOT, 'reconocimiento', 'structure_detect.py')
+const CLEARED_FLAG_PATH = path.join(RECIBIDOS_DIR, '.cleared')
 
 /**
  * Asegurar que las carpetas existan
@@ -127,13 +128,18 @@ const analyzeFile = async (filePath: string): Promise<StructureResult> => {
  */
 const processFileInBackground = async (filePath: string, filename: string) => {
     try {
+        isProcessing = true
         console.log(`[structure] Iniciando procesamiento en background: ${filename}`)
+
+        // Eliminar flag de limpiado si existe
+        try {
+            await fs.unlink(CLEARED_FLAG_PATH)
+        } catch { }
 
         const result = await analyzeFile(filePath)
 
         // Construir URLs
-        const originalUrl = `/static/uploads/${filename}` // Necesitamos exponer uploads o copiar a static
-        // Nota: El script python guarda el procesado en RECIBIDOS_DIR
+        const originalUrl = `/static/uploads/${filename}`
         const processedUrl = `/static/structure-images/${result.processed_file}`
 
         // Actualizar estado global
@@ -152,6 +158,8 @@ const processFileInBackground = async (filePath: string, filename: string) => {
 
     } catch (error) {
         console.error(`[structure] Error al procesar archivo en background (${filename}):`, error)
+    } finally {
+        isProcessing = false
     }
 }
 
@@ -160,20 +168,15 @@ const processFileInBackground = async (filePath: string, filename: string) => {
  */
 export const analyzeStructure = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        isExplicitlyCleared = false // Reset flag on new analysis
         console.log('[structure] Recibiendo petición de análisis...')
-        console.log('[structure] Headers:', req.headers)
 
         if (!req.file) {
-            console.error('[structure] Error: No se recibió ningún archivo en req.file')
             return res.status(400).json({ error: 'No se recibió ningún archivo' })
         }
 
-        console.log('[structure] Archivo recibido:', req.file.filename, req.file.path, req.file.mimetype)
-
         await ensureDirectories()
 
-        const filename = req.file.filename // Multer ya guardó el archivo
+        const filename = req.file.filename
         const filePath = req.file.path
 
         // Responder inmediatamente
@@ -187,6 +190,7 @@ export const analyzeStructure = async (req: Request, res: Response, next: NextFu
         // Procesar en background
         processFileInBackground(filePath, filename).catch(err => {
             console.error('[structure] Error crítico en background:', err)
+            isProcessing = false
         })
 
     } catch (error) {
@@ -200,12 +204,24 @@ export const analyzeStructure = async (req: Request, res: Response, next: NextFu
  */
 export const getStructureStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        // Si se limpió explícitamente, devolver null
-        if (isExplicitlyCleared) {
+        if (isProcessing) {
             return res.json({
                 success: true,
-                status: null
+                status: null,
+                processing: true,
+                message: 'Procesando archivo...'
             })
+        }
+
+        // Verificar si se limpió explícitamente (check file flag)
+        try {
+            const clearedStat = await fs.stat(CLEARED_FLAG_PATH)
+            // Si el flag existe, verificar si es más reciente que el último status en memoria
+            if (lastStatus && new Date(clearedStat.mtime) > new Date(lastStatus.timestamp)) {
+                lastStatus = null
+            }
+        } catch {
+            // No existe flag, continuar
         }
 
         // Si no hay lastStatus en memoria, intentar leer el último JSON modificado
@@ -222,6 +238,16 @@ export const getStructureStatus = async (req: Request, res: Response, next: Next
                     })).then(files => files.sort((a, b) => b.time - a.time))
 
                     const latestJson = sortedFiles[0]
+
+                    // Verificar nuevamente contra el flag de limpiado
+                    try {
+                        const clearedStat = await fs.stat(CLEARED_FLAG_PATH)
+                        if (clearedStat.mtime.getTime() > latestJson.time) {
+                            // Fue limpiado después del último archivo
+                            return res.json({ success: true, status: null })
+                        }
+                    } catch { }
+
                     const content = await fs.readFile(path.join(RECIBIDOS_DIR, latestJson.name), 'utf-8')
                     lastStatus = JSON.parse(content)
                 }
@@ -242,8 +268,13 @@ export const getStructureStatus = async (req: Request, res: Response, next: Next
 /**
  * POST /api/v1/structure/reset
  */
-export const resetStructureStatus = (req: Request, res: Response) => {
+export const resetStructureStatus = async (req: Request, res: Response) => {
     lastStatus = null
-    isExplicitlyCleared = true
+    try {
+        await ensureDirectories()
+        await fs.writeFile(CLEARED_FLAG_PATH, new Date().toISOString())
+    } catch (e) {
+        console.error('[structure] Error creating cleared flag:', e)
+    }
     res.json({ success: true, message: 'Estado reiniciado' })
 }

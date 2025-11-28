@@ -1,0 +1,18 @@
+{
+  "type": "image",
+  "score": 60,
+  "status": "🏠 Fase 4: En Etapa Final",
+  "explanation": "El sistema ha detectado un avance del 60%. Se han identificado los siguientes elementos: ventanas/puertas, paredes/pisos, techo. Según esto, la obra se encuentra en: Fase 4: En Etapa Final.",
+  "detections": [
+    "Paredes/Pisos (0.95)",
+    "Techo (0.93)",
+    "Paredes/Pisos (0.86)",
+    "Ventanas/Puertas (0.85)",
+    "Paredes/Pisos (0.50)",
+    "Paredes/Pisos (0.27)"
+  ],
+  "processed_file": "file-1764281333195-345740743.jpg",
+  "timestamp": "2025-11-27T22:08:56.606Z",
+  "originalUrl": "/static/uploads/file-1764281333195-345740743.jpg",
+  "processedUrl": "/static/structure-images/file-1764281333195-345740743.jpg"
+}

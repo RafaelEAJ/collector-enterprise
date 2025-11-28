@@ -17,31 +17,83 @@ PESOS_AVANCE = {
     3: 20.0,  # Ventanas/Puertas
 }
 
-def get_status_text(max_score):
-    if max_score < 20:
-        return "🌱 Fase 1: Proyecto Iniciado"
-    elif max_score < 40:
-        return "🏗️ Fase 2: En Desarrollo Temprano"
-    elif max_score < 60:
-        return "🚧 Fase 3: Avance Medio"
-    elif max_score < 80:
-        return "🏠 Fase 4: En Etapa Final"
+CLASS_NAMES = {
+    0: "Techo",
+    1: "Detalles",
+    2: "Paredes/Pisos",
+    3: "Ventanas/Puertas"
+}
+
+def generate_narrative_report(score, detections_set):
+    report_parts = []
+    
+    # Contexto general basado en el score
+    if score <= 25:
+        report_parts.append("El departamento se encuentra en una etapa inicial de obra gruesa.")
+    elif score <= 50:
+        report_parts.append("La unidad presenta avances parciales en su estructura y obra gruesa.")
+    elif score <= 74:
+        report_parts.append("Se observan avances significativos en las terminaciones del departamento.")
     else:
-        return "✨ Fase 5: Proyecto Completado"
+        report_parts.append("El departamento se encuentra en etapa de terminaciones finales.")
+
+    # Análisis específico por elementos (simulando estado)
+    # ID 2: Paredes/Pisos
+    if 2 in detections_set:
+        report_parts.append("Las paredes presentan avance en sus revestimientos y el piso se observa con progreso en su nivelación.")
+    else:
+        report_parts.append("Las paredes y pisos aún se encuentran en estado bruto o sin revestir.")
+
+    # ID 3: Ventanas/Puertas
+    if 3 in detections_set:
+        report_parts.append("Se verifica la presencia de marcos, puertas o ventanas instaladas.")
+    else:
+        report_parts.append("Se observa que las puertas y ventanas aún no han sido instaladas.")
+
+    # ID 0: Techo
+    if 0 in detections_set:
+        report_parts.append("El cielo raso/techo presenta avance en su instalación.")
+    
+    # ID 1: Detalles
+    if 1 in detections_set:
+        report_parts.append("Se aprecian detalles de terminaciones finas e instalaciones eléctricas/sanitarias visibles.")
+
+    return " ".join(report_parts)
+
+def get_status_text(max_score):
+    if max_score <= 25:
+        return "🌱 Fase 1: Proyecto Iniciado"
+    elif max_score <= 50:
+        return "🏗️ Fase 2: En Desarrollo Temprano"
+    elif max_score <= 74:
+        return "🚧 Fase 3: Avance Medio"
+    else:
+        return "🏠 Fase 4: En Etapa Final"
 
 def process_image(model, image_path, output_name):
     # Predicción
     # YOLO guarda en project/name/filename
-    results = model.predict(source=image_path, save=True, project='recibidos', name='detecciones_structure', exist_ok=True, conf=0.60)
+    # Lowering confidence to 0.25 to catch more features
+    results = model.predict(source=image_path, save=True, project='recibidos', name='detecciones_structure', exist_ok=True, conf=0.25)
     
     score_actual = 0.0
     objetos_en_cuadro = set()
     detections_list = []
 
+    # Debug log
+    log_path = os.path.join(SAVE_DIR, 'debug_detections.log')
+    with open(log_path, 'a') as f:
+        f.write(f"\nProcessing {output_name}:\n")
+
     for box in results[0].boxes:
         cls_id = int(box.cls[0])
-        class_name = model.names[cls_id]
-        detections_list.append(class_name)
+        conf = float(box.conf[0])
+        class_name = CLASS_NAMES.get(cls_id, str(cls_id)) # Use mapped name or ID if not found
+        detections_list.append(f"{class_name} ({conf:.2f})")
+        
+        # Log each detection
+        with open(log_path, 'a') as f:
+            f.write(f"  - Detected: {class_name} (ID: {cls_id}), Conf: {conf:.2f}\n")
         
         if cls_id in PESOS_AVANCE and cls_id not in objetos_en_cuadro:
             score_actual += PESOS_AVANCE[cls_id]
@@ -50,10 +102,14 @@ def process_image(model, image_path, output_name):
     score_actual = min(score_actual, 100.0)
     status_text = get_status_text(score_actual)
     
+    # Generar explicación narrativa
+    explanation = generate_narrative_report(score_actual, objetos_en_cuadro)
+
     return {
         "type": "image",
         "score": score_actual,
         "status": status_text,
+        "explanation": explanation,
         "detections": detections_list,
         "processed_file": os.path.basename(image_path) 
     }
@@ -89,7 +145,8 @@ def process_video(model, video_path, output_name):
         total_frames += 1
         
         # Predicción en el frame
-        results = model(frame, conf=0.60, verbose=False)
+        # Lowering confidence to 0.25
+        results = model(frame, conf=0.25, verbose=False)
         
         score_actual = 0.0
         objetos_en_cuadro = set()
@@ -97,7 +154,8 @@ def process_video(model, video_path, output_name):
         for result in results:
             for box in result.boxes:
                 cls_id = int(box.cls[0])
-                class_name = model.names[cls_id]
+                conf = float(box.conf[0])
+                class_name = CLASS_NAMES.get(cls_id, str(cls_id)) # Use mapped name
                 all_detections.add(class_name)
                 
                 if cls_id in PESOS_AVANCE and cls_id not in objetos_en_cuadro:
@@ -126,10 +184,22 @@ def process_video(model, video_path, output_name):
     
     status_text = get_status_text(max_score_visto)
     
+    # Generar explicación narrativa
+    # Reconstruir el set de IDs detectados a partir de los nombres (ya que all_detections tiene nombres)
+    # Esto es un poco hacky pero necesario porque no guardamos los IDs en all_detections
+    detected_ids = set()
+    reverse_class_names = {v: k for k, v in CLASS_NAMES.items()}
+    for name in all_detections:
+        if name in reverse_class_names:
+            detected_ids.add(reverse_class_names[name])
+            
+    explanation = generate_narrative_report(max_score_visto, detected_ids)
+
     return {
         "type": "video",
         "score": max_score_visto,
         "status": status_text,
+        "explanation": explanation,
         "detections": list(all_detections),
         "processed_file": output_name,
         "stats": {

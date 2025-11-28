@@ -1,0 +1,19 @@
+{
+  "type": "video",
+  "score": 60,
+  "status": "🏠 Fase 4: En Etapa Final",
+  "detections": [
+    "0",
+    "2",
+    "3"
+  ],
+  "processed_file": "file-1764279908298-644340029.mp4",
+  "stats": {
+    "total_frames": 186,
+    "frames_with_detection": 100,
+    "effective_time_percent": 53.76344086021505
+  },
+  "timestamp": "2025-11-27T21:45:28.900Z",
+  "originalUrl": "/static/uploads/file-1764279908298-644340029.mp4",
+  "processedUrl": "/static/structure-images/file-1764279908298-644340029.mp4"
+}
